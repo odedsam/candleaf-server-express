@@ -6,6 +6,20 @@ if(!isProduction) dotenv.config();
 
 const validatedEnv = envSchema.parse(process.env);
 
+const configuredOrigins = (process.env.FRONTEND_ORIGINS ?? process.env.FRONTEND_ORIGIN ?? '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const allowedOrigins = Array.from(
+  new Set([
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'https://candleaf-front.vercel.app',
+    ...configuredOrigins,
+  ])
+);
+
 const requiredEnvVars = [
   "PORT",
   "MONGO_URI",
@@ -16,8 +30,11 @@ const requiredEnvVars = [
   "GOOGLE_CLIENT_ID",
   "GOOGLE_SECRET_ID",
   "SUPPORT_EMAIL",
-  "SENDGRID_API_KEY",
 ];
+
+if (isProduction) {
+  requiredEnvVars.push("SENDGRID_API_KEY");
+}
 
 requiredEnvVars.forEach((varName) => {
   if (!process.env[varName]) {
@@ -34,16 +51,13 @@ export const ENV = {
   GOOGLE_CLIENT_ID: validatedEnv.GOOGLE_CLIENT_ID!,
   GOOGLE_SECRET_ID: validatedEnv.GOOGLE_SECRET_ID!,
   SUPPORT_EMAIL: validatedEnv.SUPPORT_EMAIL!,
-  SENDGRID_API_KEY: validatedEnv.SENDGRID_API_KEY!,
+  SENDGRID_API_KEY: validatedEnv.SENDGRID_API_KEY,
   PORT: Number(validatedEnv.PORT),
   NODE_ENV: isProduction ? "production" : "development",
 };
 
 export const corsOptions = {
-  origin: [
-    "http://localhost:5173",
-    "https://candleaf-front.vercel.app",
-  ],
+  origin: allowedOrigins,
   methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"],

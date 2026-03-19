@@ -8,7 +8,7 @@ export const envSchema = z.object({
   JWT_RESET_SECRET: z.string().min(1, "JWT_RESET_SECRET is required"),
   GOOGLE_CLIENT_ID: z.string().min(1, "GOOGLE_CLIENT_ID is required"),
   GOOGLE_SECRET_ID: z.string().min(1, "GOOGLE_SECRET_ID is required"),
-  SENDGRID_API_KEY: z.string().min(1, "SENDGRID_APIKEY is required"),
+  SENDGRID_API_KEY: z.string().min(1, "SENDGRID_APIKEY is required").optional(),
   SUPPORT_EMAIL: z.string().min(1, "SUPPORT_EMAIL is required"),
   NODE_ENV: z.string().refine(val => val === "development" || val === "production", {message: "NODE_ENV must be 'development' or 'production'",}).default("development"),
 });

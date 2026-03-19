@@ -3,7 +3,19 @@ import { ENV } from "../config/env";
 
 const apikey = ENV.SENDGRID_API_KEY;
 const supportEmail = ENV.SUPPORT_EMAIL;
-mail.setApiKey(apikey);
+const isConfiguredValue = (value?: string): value is string =>
+  Boolean(
+    value &&
+    value.trim() &&
+    !value.startsWith("replace-me") &&
+    !value.startsWith("local-disabled")
+  );
+
+const isSendgridConfigured = isConfiguredValue(apikey);
+
+if (isSendgridConfigured) {
+  mail.setApiKey(apikey);
+}
 
 interface EmailOptions {
   to: string;
@@ -13,6 +25,20 @@ interface EmailOptions {
 }
 
 const sendEmail = async (emailOptions: EmailOptions): Promise<void> => {
+  if (!isSendgridConfigured) {
+    if (ENV.NODE_ENV === "production") {
+      throw new Error("SENDGRID_API_KEY is not configured");
+    }
+
+    console.log("[dev-email:candleaf]", {
+      to: emailOptions.to,
+      from: emailOptions.from,
+      subject: emailOptions.subject,
+      html: emailOptions.html,
+    });
+    return;
+  }
+
   try {
     await mail.send(emailOptions);
     console.log(`Email sent to ${emailOptions.to}`);
